@@ -1,5 +1,5 @@
 import torch
-from hyperparameters import block_size, device
+from typing import Tuple, Dict
 
 # =============================================================================
 # Data Handling
@@ -9,7 +9,7 @@ from hyperparameters import block_size, device
 # 2. Building the vocabulary (mapping between words and integers).
 # 3. Encoding the text into tensors.
 
-def load_data():
+def load_data() -> Tuple[torch.Tensor, int, Dict[str, int], Dict[int, str]]:
     """
     Prepares the dataset for training.
     
@@ -66,16 +66,29 @@ def load_data():
     
     return data, vocab_size, word2idx, idx2word
 
-def get_batch(data, batch_size):
+def get_batch(
+    data: torch.Tensor, 
+    batch_size: int, 
+    block_size: int, 
+    device: str
+) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Generates a random batch of data for training.
+    
     Args:
-        data: The entire encoded text tensor.
-        batch_size: Number of sequences in the batch.
+        data (torch.Tensor): The entire encoded text tensor.
+        batch_size (int): Number of sequences in the batch.
+        block_size (int): Context length for each sequence.
+        device (str): Device to move the batch to ('cpu' or 'cuda').
+        
     Returns:
-        x: Inputs (context)
-        y: Targets (next word to predict)
+        x (torch.Tensor): Inputs (context) of shape (batch_size, block_size).
+        y (torch.Tensor): Targets (next word) of shape (batch_size, block_size).
     """
+    # Ensure dataset is large enough
+    if len(data) <= block_size:
+         raise ValueError("Dataset is too small for the requested block_size.")
+
     # Choose random starting positions
     ix = torch.randint(len(data) - block_size, (batch_size,))
     
